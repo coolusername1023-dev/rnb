@@ -1,0 +1,288 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pokémon Run & Bun | Game Launcher</title>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: #08111f;
+      color: #eef5ff;
+      font-family: Arial, sans-serif;
+    }
+
+    header {
+      padding: 18px 5%;
+      background: #101d31;
+      border-bottom: 1px solid #29466d;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    header h1 { font-size: 21px; margin: 0; }
+
+    a { color: #8fc5ff; text-decoration: none; }
+
+    main {
+      width: min(1100px, 94%);
+      margin: 32px auto;
+    }
+
+    .panel {
+      padding: 28px;
+      background: #101d31;
+      border: 1px solid #29466d;
+      border-radius: 14px;
+      margin-bottom: 20px;
+    }
+
+    h2 { margin-top: 0; }
+
+    p {
+      color: #b9c9df;
+      line-height: 1.6;
+    }
+
+    button, .file-label {
+      display: inline-block;
+      padding: 12px 18px;
+      border: 0;
+      border-radius: 8px;
+      background: #2176e5;
+      color: white;
+      font-weight: bold;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    button:hover, .file-label:hover {
+      background: #398cff;
+    }
+
+    input[type="file"] {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+      overflow: hidden;
+    }
+
+    input[type="file"]:focus-visible + .file-label {
+      outline: 2px solid white;
+      outline-offset: 3px;
+    }
+
+    #filename {
+      margin-top: 14px;
+      overflow-wrap: anywhere;
+    }
+
+    #status { color: #8fc5ff; }
+
+    #game-shell {
+      display: none;
+      width: 100%;
+      height: min(72vh, 720px);
+      min-height: 360px;
+      background: black;
+      border: 1px solid #29466d;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    #game {
+      width: 100%;
+      height: 100%;
+    }
+
+    #game-shell:fullscreen {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      border-radius: 0;
+    }
+
+    #game-shell:fullscreen #game {
+      width: 100%;
+      height: 100%;
+    }
+
+    .toolbar {
+      display: none;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin: 20px 0 12px;
+    }
+
+    @media (max-width: 600px) {
+      .panel { padding: 20px; }
+      #game-shell { min-height: 300px; }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>Pokémon Run & Bun</h1>
+    <nav>
+      <a href="index.html">Home</a>
+      &nbsp; · &nbsp;
+      <a href="controls.html">Controls & Saves</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="panel" id="launcher">
+      <h2>Choose your game</h2>
+      <p>
+        Select a Game Boy Advance .gba file from your device.
+        The file is read locally by your browser.
+      </p>
+
+      <input
+        id="rom-file"
+        type="file"
+        accept=".gba,application/octet-stream"
+      >
+      <label class="file-label" for="rom-file">
+        📂 Choose Game File
+      </label>
+
+      <p id="filename">No file selected.</p>
+      <p id="status" role="status">Ready to load a game.</p>
+    </section>
+
+    <div class="toolbar" id="toolbar">
+      <strong id="game-title">Your Game</strong>
+      <button id="fullscreen-btn" type="button">
+        ⛶ Fullscreen
+      </button>
+    </div>
+
+    <div id="game-shell">
+      <div id="game"></div>
+    </div>
+
+    <p>
+      Tip: You can select another game at any time using
+      the file picker. Save your progress in the game and
+      export backups when possible.
+    </p>
+  </main>
+
+  <script>
+    const picker = document.getElementById("rom-file");
+    const filename = document.getElementById("filename");
+    const status = document.getElementById("status");
+    const launcher = document.getElementById("launcher");
+    const shell = document.getElementById("game-shell");
+    const game = document.getElementById("game");
+    const toolbar = document.getElementById("toolbar");
+    const title = document.getElementById("game-title");
+    const fullscreenButton =
+      document.getElementById("fullscreen-btn");
+
+    let currentRomUrl = null;
+    let loaderScript = null;
+    let loading = false;
+
+    fullscreenButton.addEventListener("click", async () => {
+      try {
+        if (document.fullscreenElement) {
+          await document.exitFullscreen();
+        } else {
+          await shell.requestFullscreen();
+        }
+      } catch (error) {
+        status.textContent =
+          "Fullscreen unavailable. Try opening the game page directly.";
+      }
+    });
+
+    document.addEventListener("fullscreenchange", () => {
+      fullscreenButton.textContent =
+        document.fullscreenElement
+          ? "✕ Exit Fullscreen"
+          : "⛶ Fullscreen";
+    });
+
+    picker.addEventListener("change", () => {
+      const file = picker.files && picker.files[0];
+      if (!file) return;
+
+      if (!file.name.toLowerCase().endsWith(".gba")) {
+        status.textContent = "Please choose a .gba file.";
+        picker.value = "";
+        return;
+      }
+
+      if (loading) {
+        status.textContent =
+          "The emulator is still loading. Please wait.";
+        return;
+      }
+
+      // Avoid duplicate emulator initialization.
+      if (loaderScript) {
+        status.textContent =
+          "To load another game, refresh this page first.";
+        return;
+      }
+
+      loading = true;
+      filename.textContent = "Selected: " + file.name;
+      status.textContent = "Loading EmulatorJS…";
+      title.textContent = file.name;
+
+      // Create a temporary URL for this local file.
+      currentRomUrl = URL.createObjectURL(file);
+
+      window.EJS_player = "#game";
+      window.EJS_core = "gba";
+      window.EJS_gameName = file.name.replace(/\.gba$/i, "");
+      window.EJS_color = "#2176e5";
+      window.EJS_pathtodata =
+        "https://cdn.emulatorjs.org/stable/data/";
+      window.EJS_gameUrl = currentRomUrl;
+
+      shell.style.display = "block";
+      toolbar.style.display = "flex";
+      launcher.style.display = "none";
+
+      loaderScript = document.createElement("script");
+      loaderScript.src =
+        window.EJS_pathtodata + "loader.js";
+
+      loaderScript.onload = () => {
+        status.textContent =
+          "EmulatorJS loaded. Follow the emulator's on-screen prompts.";
+        loading = false;
+      };
+
+      loaderScript.onerror = () => {
+        status.textContent =
+          "EmulatorJS could not load. Check your internet connection and refresh.";
+        loading = false;
+      };
+
+      document.body.appendChild(loaderScript);
+    });
+
+    window.addEventListener("beforeunload", () => {
+      if (currentRomUrl) {
+        URL.revokeObjectURL(currentRomUrl);
+      }
+    });
+  </script>
+</body>
+</html>

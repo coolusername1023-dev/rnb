@@ -1,0 +1,125 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pokémon Run & Bun | Home</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: #08111f;
+      color: #eef5ff;
+      font-family: Arial, sans-serif;
+    }
+
+    header {
+      padding: 20px 6%;
+      background: #101d31;
+      border-bottom: 1px solid #263c5c;
+    }
+
+    nav { margin-top: 12px; }
+
+    nav a {
+      color: #a8d1ff;
+      margin-right: 18px;
+      text-decoration: none;
+    }
+
+    main {
+      max-width: 950px;
+      margin: 55px auto;
+      padding: 24px;
+    }
+
+    .hero {
+      padding: clamp(28px, 7vw, 70px) 25px;
+      text-align: center;
+      border: 1px solid #29466d;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #142c4c, #0c1728);
+    }
+
+    h1 { margin: 0; }
+
+    .hero h2 { font-size: clamp(28px, 5vw, 46px); }
+
+    p {
+      color: #b9c9df;
+      line-height: 1.7;
+    }
+
+    .play {
+      display: inline-block;
+      background: #2176e5;
+      color: white;
+      padding: 15px 28px;
+      border-radius: 9px;
+      text-decoration: none;
+      font-weight: bold;
+      margin-top: 14px;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 16px;
+      margin-top: 25px;
+    }
+
+    .card {
+      padding: 20px;
+      background: #101d31;
+      border: 1px solid #263c5c;
+      border-radius: 12px;
+    }
+
+    .card a { color: #8fc5ff; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Pokémon Run & Bun</h1>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="game.html">Play Game</a>
+      <a href="controls.html">Controls & Saves</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <p>YOUR BROWSER-BASED GAMING HUB</p>
+      <h2>Ready for your next challenge?</h2>
+      <p>
+        A clean, dark-themed game page with keyboard controls,
+        fullscreen support, and save-file tips.
+      </p>
+      <a class="play" href="game.html">▶ Play Now</a>
+    </section>
+
+    <section class="cards">
+      <article class="card">
+        <h3>🎮 Play in your browser</h3>
+        <p>Launch the emulator from the game page.</p>
+        <a href="game.html">Open game →</a>
+      </article>
+
+      <article class="card">
+        <h3>⛶ Fullscreen</h3>
+        <p>Expand the game to use more of your screen.</p>
+        <a href="game.html">Go to game →</a>
+      </article>
+
+      <article class="card">
+        <h3>💾 Save your progress</h3>
+        <p>Learn the difference between in-game saves and save states.</p>
+        <a href="controls.html">Read save instructions →</a>
+      </article>
+    </section>
+  </main>
+</body>
+</html>
